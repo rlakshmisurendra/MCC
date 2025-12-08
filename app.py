@@ -17,8 +17,9 @@ ADMIN_EMAILS = {
 
 # ================== BASIC CONFIG ==================
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-SERVICE_ACCOUNT_PATH = "C:\\multilingual-chatbot-27f53-firebase-adminsdk-fbsvc-866f37f184.json"  # path to Firebase service account json
+GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+SERVICE_ACCOUNT_PATH = st.secrets["firebase"]
+
 MODEL_NAME = "gemini-2.5-flash"
 
 SYSTEM_PROMPT = """
@@ -96,8 +97,9 @@ if not SERVICE_ACCOUNT_PATH or not os.path.exists(SERVICE_ACCOUNT_PATH):
 # ================== INIT FIRESTORE ==================
 
 if not firebase_admin._apps:
-    cred = credentials.Certificate(SERVICE_ACCOUNT_PATH)
+    cred = credentials.Certificate(st.secrets["firebase"])
     firebase_admin.initialize_app(cred)
+
 
 db = firestore.client()
 
@@ -197,7 +199,7 @@ def update_usage_stats(uid: str, session_start_ts: float, total_messages: int):
         merge=True,
     )
 
-import pandas as pd  # add this at the top with other imports
+
 
 
 def render_admin_dashboard():
