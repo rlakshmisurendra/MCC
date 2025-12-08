@@ -18,7 +18,7 @@ ADMIN_EMAILS = {
 # ================== BASIC CONFIG ==================
 
 GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
-SERVICE_ACCOUNT_PATH = st.secrets["firebase"]
+SERVICE_ACCOUNT_PATH = st.secrets["firebase_json"]
 
 MODEL_NAME = "gemini-2.5-flash"
 
