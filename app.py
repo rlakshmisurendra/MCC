@@ -36,7 +36,7 @@ st.set_page_config(
     layout="centered",
 )
 
-st.write("DEBUG secrets keys:", list(st.secrets.keys()))
+#st.write("DEBUG secrets keys:", list(st.secrets.keys()))
 
 st.markdown("""
 <style>
