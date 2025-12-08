@@ -93,12 +93,15 @@ if not GEMINI_API_KEY:
 
 # ================== INIT FIRESTORE ==================
 
+import json
+
 if not firebase_admin._apps:
-    cred = credentials.Certificate(st.secrets["firebase"])
+    firebase_config = json.loads(st.secrets["firebase_json"])
+    cred = credentials.Certificate(firebase_config)
     firebase_admin.initialize_app(cred)
 
-
 db = firestore.client()
+
 
 # ================== INIT GEMINI ==================
 
