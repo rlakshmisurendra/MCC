@@ -1,0 +1,40 @@
+# ============================
+# Python
+# ============================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.vscode/
+.idea/
+.DS_Store
+
+# ============================
+# Streamlit
+# ============================
+.streamlit/secrets.toml     # keep private!
+*.streamlit/secrets.toml
+# For safety – ensure you're not tracking local secrets
+secrets.toml
+
+# ============================
+# Firebase / Credentials
+# ============================
+*.json                    # service account keys
+firebase-key.json
+serviceAccountKey.json
+*.pem
+
+# ============================
+# Virtual environments
+# ============================
+env/
+venv/
+.venv/
+
+# ============================
+# Logs
+# ============================
+*.log
+logs/
