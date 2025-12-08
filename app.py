@@ -36,6 +36,8 @@ st.set_page_config(
     layout="centered",
 )
 
+st.write("DEBUG secrets keys:", list(st.secrets.keys()))
+
 st.markdown("""
 <style>
 /* Google-like button styling for ALL st.button by default */
