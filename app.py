@@ -1,6 +1,6 @@
-import os
 import time
 from datetime import datetime, timezone
+import json
 
 import streamlit as st
 from langdetect import detect
@@ -18,8 +18,6 @@ ADMIN_EMAILS = {
 # ================== BASIC CONFIG ==================
 
 GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
-SERVICE_ACCOUNT_PATH = st.secrets["firebase_json"]
-
 MODEL_NAME = "gemini-2.5-flash"
 
 SYSTEM_PROMPT = """
@@ -90,18 +88,15 @@ if not GEMINI_API_KEY:
     st.error("❗ GEMINI_API_KEY not set.")
     st.stop()
 
-
 # ================== INIT FIRESTORE ==================
 
-import json
-
 if not firebase_admin._apps:
+    # firebase_json is a JSON string in secrets → parse it
     firebase_config = json.loads(st.secrets["firebase_json"])
     cred = credentials.Certificate(firebase_config)
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()
-
 
 # ================== INIT GEMINI ==================
 
@@ -144,7 +139,7 @@ def ensure_user_doc(user):
     """
     Store user details in Firestore on first login or update on later logins.
     """
-    # Google OIDC always has "sub" as unique subject ID
+    # Google OIDC usually has "sub" as unique subject ID
     uid = (
         getattr(user, "sub", None)
         or getattr(user, "email", None)  # fallback
@@ -182,7 +177,6 @@ def ensure_user_doc(user):
     return uid
 
 
-
 def update_usage_stats(uid: str, session_start_ts: float, total_messages: int):
     """Store usage stats: session time + message count."""
     usage_ref = db.collection("usage").document(uid)
@@ -198,8 +192,6 @@ def update_usage_stats(uid: str, session_start_ts: float, total_messages: int):
         },
         merge=True,
     )
-
-
 
 
 def render_admin_dashboard():
@@ -253,8 +245,6 @@ def render_admin_dashboard():
     st.dataframe(df, use_container_width=True)
 
 
-
-
 # ================== SESSION STATE ==================
 
 if "chat" not in st.session_state:
@@ -276,8 +266,6 @@ chat = st.session_state.chat
 
 # ================== AUTH WITH OIDC GOOGLE ==================
 
-# If not logged in, show login button using st.login("google")
-# ================== AUTH WITH OIDC GOOGLE ==================
 if not st.user.is_logged_in:
 
     google_logo_url = "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
@@ -296,7 +284,7 @@ if not st.user.is_logged_in:
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if st.button(
-            label=" Login with Google", 
+            label=" Login with Google",
             use_container_width=True,
             help="Sign in using your Google account"
         ):
@@ -327,12 +315,9 @@ if not st.user.is_logged_in:
 
     st.stop()
 
-
 # If logged in, we have st.user filled
-# st.user is a dict-like; access fields as attributes in newer versions
 uid = ensure_user_doc(st.user)
 st.session_state.uid = uid
-
 
 user_email = getattr(st.user, "email", "")
 
@@ -346,7 +331,6 @@ if user_email in ADMIN_EMAILS:
         page = st.radio("Go to", ["Chatbot", "Admin dashboard"])
 else:
     page = "Chatbot"
-
 
 # Start session timer if first time this session
 if st.session_state.session_start_ts is None:
@@ -384,7 +368,6 @@ with st.sidebar:
                 )
             st.logout()
             st.stop()
-
 
 # ================== MAIN AREA: ROUTING ==================
 if page == "Admin dashboard":
@@ -427,7 +410,7 @@ else:
                 if st.session_state.session_start_ts is not None and st.session_state.uid:
                     update_usage_stats(
                         st.session_state.uid,
-                        st.session_state.session_start_ts,
+                        st.session_start_ts,
                         st.session_state.total_user_messages,
                     )
 
