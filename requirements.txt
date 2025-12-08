@@ -3,3 +3,4 @@ langdetect
 google-generativeai
 pandas
 firebase-admin
+Authlib
