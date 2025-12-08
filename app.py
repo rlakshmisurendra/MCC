@@ -93,8 +93,8 @@ if not GEMINI_API_KEY:
 # ================== INIT FIRESTORE ==================
 
 if not firebase_admin._apps:
-    # firebase_json is a JSON string in secrets → parse it
-    firebase_config = json.loads(st.secrets["firebase_json"])
+    # st.secrets["firebase"] is a TOML table → behaves like a dict
+    firebase_config = dict(st.secrets["firebase"])
     cred = credentials.Certificate(firebase_config)
     firebase_admin.initialize_app(cred)
 
