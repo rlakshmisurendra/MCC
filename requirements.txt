@@ -1,4 +1,5 @@
 streamlit
-google-generativeai
 langdetect
-python-dotenv
+google-generativeai
+pandas
+firebase-admin
