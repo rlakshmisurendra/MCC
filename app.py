@@ -90,9 +90,6 @@ if not GEMINI_API_KEY:
     st.error("❗ GEMINI_API_KEY not set.")
     st.stop()
 
-if not SERVICE_ACCOUNT_PATH or not os.path.exists(SERVICE_ACCOUNT_PATH):
-    st.error("❗ GOOGLE_APPLICATION_CREDENTIALS not set or file not found.")
-    st.stop()
 
 # ================== INIT FIRESTORE ==================
 
