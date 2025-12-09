@@ -412,7 +412,7 @@ else:
                 if st.session_state.session_start_ts is not None and st.session_state.uid:
                     update_usage_stats(
                         st.session_state.uid,
-                        st.session_start_ts,
+                        st.session_state.session_start_ts,
                         st.session_state.total_user_messages,
                     )
 
