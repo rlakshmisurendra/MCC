@@ -31,13 +31,12 @@ Rules:
 """
 
 # -------------------------
-# THEME-AWARE GLOBAL CSS (replace previous CSS with this)
+# THEME-AWARE GLOBAL CSS
 # -------------------------
 st.markdown(
     """
     <style>
 
-    /* Theme vars */
     :root {
         --txt: var(--text-color);
         --bg: var(--background-color);
@@ -46,7 +45,7 @@ st.markdown(
         --txt2: var(--secondary-text-color);
     }
 
-    /* Banner (centered visual width) */
+    /* Banner */
     .top-banner img {
         width:100%;
         height:260px;
@@ -61,7 +60,7 @@ st.markdown(
         .top-banner img { height:140px; }
     }
 
-    /* Department title */
+    /* Heading */
     .dept-text {
         font-size:28px;
         font-weight:800;
@@ -70,6 +69,7 @@ st.markdown(
         margin-top:20px;
     }
 
+    /* Underline */
     .dept-underline {
         width:180px;
         height:6px;
@@ -79,7 +79,7 @@ st.markdown(
         box-shadow: 0 0 16px rgba(255,95,109,0.22);
     }
 
-    /* Info box (theme adaptive) */
+    /* Info box */
     .info-box {
         max-width:700px;
         width:100%;
@@ -92,28 +92,27 @@ st.markdown(
         color: var(--txt);
         border: 1px solid rgba(120,120,120,0.12);
         border-radius:12px;
-        backdrop-filter: blur(4px);
         box-shadow: 0 6px 20px rgba(0,0,0,0.06);
     }
 
     /* CTA wrapper */
-    .cta-wrap { 
-        width:100%; 
-        display:flex; 
+    .cta-wrap {
+        width:100%;
+        display:flex;
         justify-content:center;
-        margin-top:20px;
-        margin-bottom:30px;
+        margin-top:22px;
+        margin-bottom:34px;
     }
 
-    /* Streamlit button override (theme-aware) */
+    /* Buttons theme-aware */
     .stButton > button {
         background: var(--primary) !important;
-        color: var(--text-color) !important;
+        color: var(--txt) !important;
         border-radius: 10px !important;
         padding: 12px 30px !important;
         font-weight: 700 !important;
         border: none !important;
-        transition: transform .12s ease, opacity .12s ease;
+        transition: .2s;
     }
     .stButton > button:hover {
         opacity: 0.96;
@@ -121,9 +120,9 @@ st.markdown(
     }
 
     /* Login panel */
+    .login-panel { text-align:center; margin-top:18px; }
     .login-title { font-size:22px; font-weight:700; color: var(--txt); }
-    .login-sub { font-size:14px; color: var(--txt2); margin-bottom:12px; }
-    .login-panel { max-width:720px; margin: 20px auto; text-align:center; }
+    .login-sub { font-size:14px; color: var(--txt2); }
 
     </style>
     """,
@@ -131,124 +130,105 @@ st.markdown(
 )
 
 # -------------------------
-# FIRESTORE (optional) initialization
+# FIRESTORE INIT
 # -------------------------
 db = None
 firebase_config = st.secrets.get("firebase")
+
 if firebase_config:
     try:
         if not firebase_admin._apps:
             cred = credentials.Certificate(dict(firebase_config))
             firebase_admin.initialize_app(cred)
         db = firestore.client()
-    except Exception as e:
-        st.warning(f"Firestore init failed: {e}")
+    except:
         db = None
 
 # -------------------------
-# GEMINI init (defensive)
+# GEMINI INIT
 # -------------------------
 model = None
 try:
     if GEMINI_API_KEY:
         genai.configure(api_key=GEMINI_API_KEY)
         model = genai.GenerativeModel(model_name=MODEL_NAME, system_instruction=SYSTEM_PROMPT)
-except Exception as e:
-    st.warning(f"Generative model init warning: {e}")
+except:
     model = None
 
 # -------------------------
 # HELPERS
 # -------------------------
-def safe_detect_language(text: str) -> str:
+def safe_detect_language(text):
     try:
         return detect(text)
-    except Exception:
+    except:
         return "unknown"
 
-def lang_label(lang_code: str) -> str:
+def lang_label(lang):
     mapping = {
         "en":"English","hi":"Hindi","te":"Telugu","ta":"Tamil","kn":"Kannada",
         "ml":"Malayalam","mr":"Marathi","gu":"Gujarati","bn":"Bengali","ur":"Urdu"
     }
-    return mapping.get(lang_code, lang_code)
+    return mapping.get(lang, lang)
 
 def ensure_user_doc(user):
     if db is None:
-        return getattr(user, "email", None) or getattr(user, "sub", None)
+        return getattr(user, "email", None)
+
     uid = getattr(user, "sub", None) or getattr(user, "email", None)
-    name = getattr(user, "name", "")
-    email = getattr(user, "email", "")
-    picture = getattr(user, "picture", "")
+    data = {
+        "name": getattr(user, "name", ""),
+        "email": getattr(user, "email", ""),
+        "picture": getattr(user, "picture", ""),
+        "last_login_at": datetime.now(timezone.utc).isoformat(),
+    }
     users_ref = db.collection("users").document(uid)
-    now = datetime.now(timezone.utc).isoformat()
-    doc = users_ref.get()
-    if doc.exists:
-        users_ref.update({
-            "name": name,
-            "email": email,
-            "picture": picture,
-            "last_login_at": now,
-        })
+    if users_ref.get().exists:
+        users_ref.update(data)
     else:
-        users_ref.set({
-            "uid": uid,
-            "name": name,
-            "email": email,
-            "picture": picture,
-            "created_at": now,
-            "last_login_at": now,
-        })
+        data["created_at"] = data["last_login_at"]
+        users_ref.set(data)
     return uid
 
-def update_usage_stats(uid: str, session_start_ts: float, total_messages: int):
+def update_usage_stats(uid, start_ts, msg_count):
     if db is None:
         return
     usage_ref = db.collection("usage").document(uid)
-    now_ts = time.time()
-    session_seconds = int(now_ts - session_start_ts)
     usage_ref.set({
         "last_updated": datetime.now(timezone.utc).isoformat(),
-        "last_session_seconds": session_seconds,
-        "last_session_messages": total_messages,
+        "last_session_seconds": int(time.time() - start_ts),
+        "last_session_messages": msg_count,
     }, merge=True)
 
 # -------------------------
-# LOGIN-ONLY VIEW (banner + centered login)
+# LOGIN SCREEN (banner + google)
 # -------------------------
 def render_login_only():
-    # Use columns -> middle column contains banner + login so everything is centered
-    left, mid, right = st.columns([1, 2, 1])
+    left, mid, right = st.columns([1,2,1])
     with mid:
         st.markdown('<div class="top-banner">', unsafe_allow_html=True)
-        try:
-            st.image("assets/banner.jpg", use_column_width=True)
-        except Exception:
-            st.image("https://via.placeholder.com/1200x300.png?text=Banner", use_column_width=True)
+        st.image("assets/banner.jpg", use_column_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown('<div class="login-panel">', unsafe_allow_html=True)
         st.markdown('<div class="login-title">Continue with Google</div>', unsafe_allow_html=True)
         st.markdown('<div class="login-sub">Sign in with your Google account to continue</div>', unsafe_allow_html=True)
-        if st.button(" Login with Google", key="login_btn_center", use_container_width=True):
+
+        if st.button(" Login with Google", use_container_width=True):
             try:
                 st.login("google")
-            except Exception:
-                st.error("st.login not available in this runtime. Deploy on Streamlit Cloud to use Google OIDC.")
+            except:
+                st.error("Google login only works on Streamlit Cloud.")
         st.markdown('</div>', unsafe_allow_html=True)
 
 # -------------------------
-# FULL HOME (banner + dept + info + CTA) - centered
+# FULL HOME SCREEN
 # -------------------------
 def render_full_home():
-    left, mid, right = st.columns([1, 2, 1])
+    left, mid, right = st.columns([1,2,1])
     with mid:
-        # banner (inside mid for consistent visual width)
         st.markdown('<div class="top-banner">', unsafe_allow_html=True)
-        try:
-            st.image("assets/banner.jpg", use_column_width=True)
-        except Exception:
-            st.image("https://via.placeholder.com/1200x300.png?text=Banner", use_column_width=True)
+        st.image("assets/banner.jpg", use_column_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown('<div class="dept-text">Department of CSE - AIML</div>', unsafe_allow_html=True)
@@ -264,21 +244,20 @@ def render_full_home():
         )
 
         st.markdown('<div class="cta-wrap">', unsafe_allow_html=True)
-        if st.button("Get Started →", key="home_get_started_center"):
-            st.session_state.show_login = True
-            try:
-                st.experimental_rerun()
-            except Exception:
-                pass
+        clicked = st.button("Get Started →")
         st.markdown('</div>', unsafe_allow_html=True)
 
+        if clicked:
+            st.session_state.show_login = True
+            st.rerun()
+
 # -------------------------
-# SESSION STATE initialization
+# SESSION STATE
 # -------------------------
 if "show_login" not in st.session_state:
     st.session_state.show_login = False
 if "chat" not in st.session_state:
-    st.session_state.chat = None if model is None else model.start_chat(history=[])
+    st.session_state.chat = model.start_chat(history=[]) if model else None
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "session_start_ts" not in st.session_state:
@@ -287,83 +266,73 @@ if "total_user_messages" not in st.session_state:
     st.session_state.total_user_messages = 0
 
 # -------------------------
-# MAIN FLOW
+# MAIN FLOW CONTROL
 # -------------------------
 user_logged_in = getattr(getattr(st, "user", None), "is_logged_in", False)
 
-# If user clicked Get Started and isn't logged in -> show login-only view
-if st.session_state.get("show_login", False) and not user_logged_in:
+# If user clicked Get Started but not logged in → show login view
+if st.session_state.show_login and not user_logged_in:
     render_login_only()
     st.stop()
 
-# If not logged in show full home
+# If not logged in → show home
 if not user_logged_in:
     render_full_home()
     st.stop()
 
-# Logged in: ensure user doc & proceed
+# -------------------------
+# LOGGED-IN FLOW
+# -------------------------
 uid = ensure_user_doc(st.user)
 st.session_state.uid = uid
+
 if st.session_state.session_start_ts is None:
     st.session_state.session_start_ts = time.time()
 
-# Sidebar (user info + controls)
+# Sidebar user details
 with st.sidebar:
     st.subheader("👤 User")
-    st.write(f"Name: `{getattr(st.user, 'name', 'N/A')}`")
-    st.write(f"Email: `{getattr(st.user, 'email', 'N/A')}`")
+    st.write(f"Name: `{st.user.name}`")
+    st.write(f"Email: `{st.user.email}`")
     st.write(f"UID: `{uid}`")
 
-    if st.session_state.session_start_ts is not None:
-        elapsed = int(time.time() - st.session_state.session_start_ts)
-        mins = elapsed // 60
-        secs = elapsed % 60
-        st.write(f"Session time: **{mins} min {secs} sec**")
-        st.write(f"Messages sent: **{st.session_state.total_user_messages}**")
+    elapsed = int(time.time() - st.session_state.session_start_ts)
+    st.write(f"Session time: {elapsed//60} min {elapsed%60} sec")
+    st.write(f"Messages: {st.session_state.total_user_messages}")
 
     if st.button("🧹 Clear Chat"):
         st.session_state.messages = []
-        st.session_state.chat = None if model is None else model.start_chat(history=[])
+        st.session_state.chat = model.start_chat(history=[]) if model else None
         st.session_state.total_user_messages = 0
-        st.success("Chat history cleared!")
+        st.rerun()
 
     if st.button("🚪 Logout"):
-        if st.session_state.session_start_ts is not None and getattr(st, "user", None):
-            update_usage_stats(uid, st.session_state.session_start_ts, st.session_state.total_user_messages)
-        try:
-            st.logout()
-        except Exception:
-            st.warning("st.logout not available in this runtime.")
-        try:
-            st.experimental_rerun()
-        except Exception:
-            pass
+        update_usage_stats(uid, st.session_state.session_start_ts, st.session_state.total_user_messages)
+        st.logout()
+        st.rerun()
 
-# Admin routing
+# Admin navigation
 page = "Chatbot"
-user_email = getattr(st.user, "email", "")
-if user_email in ADMIN_EMAILS:
+if st.user.email in ADMIN_EMAILS:
     with st.sidebar:
-        st.markdown("### Navigation")
-        page = st.radio("Go to", ["Chatbot", "Admin dashboard"])
+        page = st.radio("Navigation", ["Chatbot", "Admin dashboard"])
 
 if page == "Admin dashboard":
-    render_admin_dashboard()
+    st.title("📊 Admin Dashboard")
+    st.write("Admin panel will be implemented here.")
     st.stop()
 
-# Chat UI
+# -------------------------
+# CHAT UI
+# -------------------------
 st.title("🌐 Multilingual Chatbot")
-st.caption("Type anything in any language. The bot will reply in the same language. ✨")
-
-if st.session_state.chat is None and model is not None:
-    st.session_state.chat = model.start_chat(history=[])
+st.caption("Type anything in any language. I will reply in the same language ✨")
 
 for msg in st.session_state.messages:
-    role = msg.get("role", "user")
-    with st.chat_message(role):
-        st.markdown(msg.get("content", ""))
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
 
-user_input = st.chat_input("Type your message here...")
+user_input = st.chat_input("Type here…")
 
 if user_input:
     lang = safe_detect_language(user_input)
@@ -375,22 +344,8 @@ if user_input:
         st.markdown(user_input)
 
     with st.chat_message("assistant"):
-        try:
-            if st.session_state.chat is None:
-                bot_reply = "Model not configured (GEMINI_API_KEY missing or model init failed)."
-                st.error(bot_reply)
-            else:
-                with st.spinner("Thinking..."):
-                    response = st.session_state.chat.send_message(user_input)
-                    bot_reply = response.text
-                st.markdown(bot_reply)
+        reply = st.session_state.chat.send_message(user_input).text
+        st.markdown(reply)
+        st.session_state.messages.append({"role": "assistant", "content": reply, "lang": lang})
 
-            st.session_state.messages.append({"role": "assistant", "content": bot_reply, "lang": lang})
-
-            if st.session_state.session_start_ts is not None and getattr(st, "user", None):
-                update_usage_stats(uid, st.session_state.session_start_ts, st.session_state.total_user_messages)
-
-        except Exception as e:
-            err = f"⚠ Error: {e}"
-            st.error(err)
-            st.session_state.messages.append({"role": "assistant", "content": err, "lang": None})
+    st.rerun()
