@@ -30,12 +30,6 @@ Always reply in the same language as the user.
 st.markdown(
     """
     <style>
-
-    /* move the icon slightly left so it visually overlaps the button edge */
-.stApp .stImage {
-  margin-right: -10px; /* tweak this value if needed */
-}
-
     /* --------------------------------------------------
        Theme-aware variables (works with prefers-color-scheme
        and Streamlit's [data-theme] attribute)
