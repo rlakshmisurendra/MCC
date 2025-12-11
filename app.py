@@ -51,6 +51,22 @@ st.markdown(
     .stButton>button { border-radius: 10px; padding: .45rem 1rem; font-weight:600; }
 
     /* Chat bubbles small tweak (optional) */
+    /* Info box styling */
+.info-box {
+    max-width: 700px;
+    margin: 20px auto 10px;
+    padding: 14px 22px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+}
+
     </style>
     """,
     unsafe_allow_html=True,
@@ -266,81 +282,48 @@ def show_login_panel():
 def render_home():
     banner_path = "assets/banner.jpg"
 
-    # FULL-WIDTH TOP BANNER (like sacet.ac.in)
-    st.markdown(
-        """
-        <style>
-        .top-banner {
-            width: 100%;
-            display: block;
-            margin: 0;
-            padding: 0;
-        }
-        .top-banner img {
-            width: 100%;
-            height: auto;
-            display: block;
-            object-fit: cover;
-        }
-
-        .home-center {
-            width: 100%;
-            text-align: center;
-            margin-top: 25px;
-        }
-
-        .dept-text {
-            font-weight: 700;
-            font-size: 24px;
-            color: white;
-            margin-top: 10px;
-            margin-bottom: 20px;
-        }
-
-        .get-started-wrap {
-            text-align: center;
-            margin-top: 10px;
-        }
-
-        .stButton>button {
-            border-radius: 10px !important; 
-            padding: 12px 22px !important;
-            font-weight: 600 !important;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    # Top banner exactly like SACET website
+    # ---------- TOP BANNER ----------
     st.markdown('<div class="top-banner">', unsafe_allow_html=True)
     try:
         st.image(banner_path, use_column_width=True)
-    except:
-        st.image("https://via.placeholder.com/1200x200?text=Banner", use_column_width=True)
+    except Exception:
+        st.image("https://via.placeholder.com/1200x320?text=Banner", use_column_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Centered content
+    # ---------- CENTER BLOCK ----------
     st.markdown('<div class="home-center">', unsafe_allow_html=True)
 
-    st.markdown('<div class="dept-text">Department of CSE - AIML</div>', unsafe_allow_html=True)
+    # Department Text
+    st.markdown(
+        '<div class="dept-text">Department of CSE - AIML</div>',
+        unsafe_allow_html=True
+    )
+    st.markdown('<div class="dept-underline"></div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="get-started-wrap">', unsafe_allow_html=True)
-    clicked = st.button("Get started →", key="home_get_started")
+    # ---------- INFO BOX ----------
+    st.markdown(
+        """
+        <div class="info-box">
+            Unlock seamless multilingual communication—start now!
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # ---------- GET STARTED BUTTON ----------
+    st.markdown('<div class="cta-wrap">', unsafe_allow_html=True)
+    clicked = st.button("Get Started →", key="home_get_started")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)  # close .home-center
 
+    # When clicked → show login panel
     if clicked:
         st.session_state.show_login = True
 
-    # Show login panel after clicking Get Started
-    if st.session_state.get("show_login") and not getattr(st.user, "is_logged_in", False):
-        show_login_panel()
+    if st.session_state.get("show_login", False) and not getattr(st.user, "is_logged_in", False):
+        show_login_panel(autoscroll=True)
+
 
 # -------------------------
 # MAIN FLOW
