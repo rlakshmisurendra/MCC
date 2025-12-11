@@ -229,8 +229,8 @@ chat = st.session_state.chat
 # RENDER: Home (default for not-logged-in)
 # -------------------------
 def render_home():
-    banner_url = st.secrets.get("BANNER_URL") if hasattr(st, "secrets") else None
-    display_banner = banner_url or "https://via.placeholder.com/220x420.png?text=Banner"
+    # Use local banner image
+    banner_path = "assets/banner.jpg"
 
     st.markdown('<div class="home-container">', unsafe_allow_html=True)
 
@@ -253,16 +253,22 @@ def render_home():
     st.markdown('</div>', unsafe_allow_html=True)  # .hero-card
     st.markdown('</div>', unsafe_allow_html=True)  # .main-area
 
-    # Banner
+    # Banner area (using local asset)
     st.markdown('<div class="banner-area">', unsafe_allow_html=True)
-    st.markdown(f'<img src="{display_banner}" class="banner-img" />', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)  # .banner-area
 
+    try:
+        st.image(banner_path, use_column_width=True)
+    except Exception as e:
+        st.warning(f"Banner failed to load: {e}")
+        st.info("Make sure banner is inside assets/banner.jpg")
+
+    st.markdown('</div>', unsafe_allow_html=True)  # .banner-area
     st.markdown('</div>', unsafe_allow_html=True)  # .home-container
 
     # login panel below hero if requested
     if st.session_state.show_login and not getattr(st.user, "is_logged_in", False):
         show_login_panel()
+
 
 # -------------------------
 # LOGIN PANEL (revealed after clicking Get started)
