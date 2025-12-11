@@ -322,6 +322,7 @@ def render_home():
     clicked = st.button("Get Started →", key="home_get_started")
     st.markdown('</div>', unsafe_allow_html=True)
 
+
     st.markdown('</div>', unsafe_allow_html=True)  # close .home-center
 
     # When clicked → show login panel
