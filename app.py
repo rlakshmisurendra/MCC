@@ -31,106 +31,107 @@ Rules:
 """
 
 # -------------------------
-# GLOBAL CSS (theme-aware + centered)
+# THEME-AWARE GLOBAL CSS (replace previous CSS with this)
 # -------------------------
 st.markdown(
     """
     <style>
-    /* Use Streamlit theme variables where possible so colors adapt to light/dark themes */
+
+    /* Theme vars */
     :root {
-      --app-text: var(--text-color, #111827);
-      --app-secondary-bg: var(--secondary-background-color, rgba(0,0,0,0.05));
-      --app-border: rgba(0,0,0,0.06);
+        --txt: var(--text-color);
+        --bg: var(--background-color);
+        --bg2: var(--secondary-background-color);
+        --primary: var(--primary-color);
+        --txt2: var(--secondary-text-color);
     }
 
-    /* Top banner: placed in middle column to guarantee centering */
+    /* Banner (centered visual width) */
     .top-banner img {
         width:100%;
-        height:300px;
+        height:260px;
         object-fit:cover;
-        border-radius:10px;
-        box-shadow: 0 8px 28px rgba(0,0,0,0.10);
-        margin: 14px auto;
+        border-radius:12px;
+        margin: 18px auto;
         display:block;
         max-width:1200px;
+        box-shadow: 0 6px 28px rgba(0,0,0,0.10);
     }
     @media (max-width:900px){
         .top-banner img { height:140px; }
     }
 
-    /* Department title (inherits theme text color) */
+    /* Department title */
     .dept-text {
-        font-size:26px;
+        font-size:28px;
         font-weight:800;
-        color: var(--app-text);
-        margin-top: 18px;
-        margin-bottom: 6px;
+        color: var(--txt);
         text-align:center;
+        margin-top:20px;
     }
 
-    /* Gradient underline (visual accent) */
     .dept-underline {
-        width:160px;
+        width:180px;
         height:6px;
         border-radius:10px;
         background: linear-gradient(90deg, #ffb347, #ff5f6d);
-        box-shadow: 0 6px 18px rgba(255,95,109,0.12);
-        margin: 12px auto 18px;
+        margin: 10px auto 25px;
+        box-shadow: 0 0 16px rgba(255,95,109,0.22);
     }
 
-    /* Info box: uses secondary background so it adapts to light/dark */
+    /* Info box (theme adaptive) */
     .info-box {
-        max-width:760px;
+        max-width:700px;
         width:100%;
         margin: 12px auto;
-        padding: 16px 20px;
-        text-align:center;
+        padding: 18px 22px;
         font-size:18px;
         font-weight:600;
-        color: var(--app-text);
-        background: var(--app-secondary-bg);
-        border: 1px solid var(--app-border);
+        text-align:center;
+        background: var(--bg2);
+        color: var(--txt);
+        border: 1px solid rgba(120,120,120,0.12);
         border-radius:12px;
         backdrop-filter: blur(4px);
-        box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.06);
     }
 
-    /* CTA wrapper (when inside middle column it will be centered) */
-    .cta-wrap {
-        width:100%;
-        display:flex;
+    /* CTA wrapper */
+    .cta-wrap { 
+        width:100%; 
+        display:flex; 
         justify-content:center;
-        margin-top: 20px;
-        margin-bottom: 30px;
+        margin-top:20px;
+        margin-bottom:30px;
     }
 
-    /* Make Streamlit default button look nice and theme-friendly */
-    .stButton>button {
-        border-radius: 10px !important;
-        padding: 12px 26px !important;
-        font-weight:700 !important;
-        font-size:16px !important;
+    /* Streamlit button override (theme-aware) */
+    .stButton > button {
+        background: var(--primary) !important;
         color: var(--text-color) !important;
-        background: var(--primary-color) !important;
-        border: 1px solid rgba(0,0,0,0.08) !important;
+        border-radius: 10px !important;
+        padding: 12px 30px !important;
+        font-weight: 700 !important;
+        border: none !important;
+        transition: transform .12s ease, opacity .12s ease;
+    }
+    .stButton > button:hover {
+        opacity: 0.96;
+        transform: translateY(-2px);
     }
 
-    /* Login panel adjustments */
+    /* Login panel */
+    .login-title { font-size:22px; font-weight:700; color: var(--txt); }
+    .login-sub { font-size:14px; color: var(--txt2); margin-bottom:12px; }
     .login-panel { max-width:720px; margin: 20px auto; text-align:center; }
-    .login-title { font-size:20px; font-weight:700; margin-bottom:6px; color: var(--app-text); }
-    .login-sub { color: var(--secondary-text-color, #6b7280); margin-bottom:12px; }
 
-    /* Ensure central column content has no left offset */
-    .stApp > div[data-testid="stHorizontalBlock"] {
-        /* no-op; kept as placeholder if needed */
-    }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
 # -------------------------
-# FIRESTORE initialization (optional)
+# FIRESTORE (optional) initialization
 # -------------------------
 db = None
 firebase_config = st.secrets.get("firebase")
@@ -216,7 +217,7 @@ def update_usage_stats(uid: str, session_start_ts: float, total_messages: int):
 # LOGIN-ONLY VIEW (banner + centered login)
 # -------------------------
 def render_login_only():
-    # Banner in middle column for perfect centering & consistent max width
+    # Use columns -> middle column contains banner + login so everything is centered
     left, mid, right = st.columns([1, 2, 1])
     with mid:
         st.markdown('<div class="top-banner">', unsafe_allow_html=True)
@@ -229,23 +230,20 @@ def render_login_only():
         st.markdown('<div class="login-panel">', unsafe_allow_html=True)
         st.markdown('<div class="login-title">Continue with Google</div>', unsafe_allow_html=True)
         st.markdown('<div class="login-sub">Sign in with your Google account to continue</div>', unsafe_allow_html=True)
-
         if st.button(" Login with Google", key="login_btn_center", use_container_width=True):
             try:
                 st.login("google")
             except Exception:
                 st.error("st.login not available in this runtime. Deploy on Streamlit Cloud to use Google OIDC.")
-
         st.markdown('</div>', unsafe_allow_html=True)
 
 # -------------------------
 # FULL HOME (banner + dept + info + CTA) - centered
 # -------------------------
 def render_full_home():
-    # Use columns to guarantee central alignment
     left, mid, right = st.columns([1, 2, 1])
     with mid:
-        # Banner
+        # banner (inside mid for consistent visual width)
         st.markdown('<div class="top-banner">', unsafe_allow_html=True)
         try:
             st.image("assets/banner.jpg", use_column_width=True)
@@ -253,11 +251,9 @@ def render_full_home():
             st.image("https://via.placeholder.com/1200x300.png?text=Banner", use_column_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # Department title / underline
         st.markdown('<div class="dept-text">Department of CSE - AIML</div>', unsafe_allow_html=True)
         st.markdown('<div class="dept-underline"></div>', unsafe_allow_html=True)
 
-        # Info box
         st.markdown(
             """
             <div class="info-box">
@@ -267,7 +263,6 @@ def render_full_home():
             unsafe_allow_html=True
         )
 
-        # CTA
         st.markdown('<div class="cta-wrap">', unsafe_allow_html=True)
         if st.button("Get Started →", key="home_get_started_center"):
             st.session_state.show_login = True
@@ -306,18 +301,19 @@ if not user_logged_in:
     render_full_home()
     st.stop()
 
-# Logged in: standard app
+# Logged in: ensure user doc & proceed
 uid = ensure_user_doc(st.user)
 st.session_state.uid = uid
 if st.session_state.session_start_ts is None:
     st.session_state.session_start_ts = time.time()
 
-# Sidebar
+# Sidebar (user info + controls)
 with st.sidebar:
     st.subheader("👤 User")
     st.write(f"Name: `{getattr(st.user, 'name', 'N/A')}`")
     st.write(f"Email: `{getattr(st.user, 'email', 'N/A')}`")
     st.write(f"UID: `{uid}`")
+
     if st.session_state.session_start_ts is not None:
         elapsed = int(time.time() - st.session_state.session_start_ts)
         mins = elapsed // 60
