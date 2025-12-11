@@ -52,11 +52,15 @@ st.markdown(
 
     /* ----------- HOME CENTER BLOCK ----------- */
     .home-center {
-        width: 100%;
-        max-width: 900px;
-        margin: 10px auto 30px;
-        text-align: center;
-    }
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;      /* center horizontally */
+    justify-content: center;  /* center vertically */
+    margin-top: 40px;
+    text-align: center;
+    padding: 0 20px;
+}
 
     .dept-text {
         font-size: 26px;
@@ -227,12 +231,17 @@ def render_home():
     st.image("assets/banner.jpg", use_column_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Center box
+    # ---------- CENTERED BLOCK ----------
     st.markdown('<div class="home-center">', unsafe_allow_html=True)
 
-    st.markdown('<div class="dept-text">Department of CSE - AIML</div>', unsafe_allow_html=True)
+    # Department text
+    st.markdown(
+        '<div class="dept-text">Department of CSE - AIML</div>',
+        unsafe_allow_html=True
+    )
     st.markdown('<div class="dept-underline"></div>', unsafe_allow_html=True)
 
+    # Info box
     st.markdown(
         """
         <div class="info-box">
@@ -242,12 +251,14 @@ def render_home():
         unsafe_allow_html=True
     )
 
+    # Get started button
     st.markdown('<div class="cta-wrap">', unsafe_allow_html=True)
     clicked = st.button("Get Started →", key="home_get_started")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)  # close home-center wrapper
 
+    # Show login panel if clicked
     if clicked:
         st.session_state.show_login = True
 
