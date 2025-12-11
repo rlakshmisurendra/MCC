@@ -231,7 +231,7 @@ chat = st.session_state.chat
 # -------------------------
 # LOGIN PANEL (used by home)
 # -------------------------
-def show_login_panel():
+def show_login_panel(autoscroll=True):
     google_logo_url = "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
     st.markdown("<hr/>", unsafe_allow_html=True)
     st.markdown(
