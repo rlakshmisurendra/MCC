@@ -372,6 +372,39 @@ def show_login_panel(autoscroll=True):
             except Exception:
                 st.error("st.login not available in this runtime. Deploy on Streamlit Cloud to use Google OIDC.")
 
+    # Add CSS overlay for the Google logo inside the button.
+    # This re-adds the small left-aligned logo inside Streamlit's button using ::before.
+    st.markdown(
+        f"""
+        <style>
+        /* Put Google logo on the left inside buttons. */
+        .stButton > button {{
+            position: relative;
+            padding-left: 48px !important; /* make space for the icon */
+        }}
+        .stButton > button::before {{
+            content: "";
+            background-image: url('{google_logo_url}');
+            background-repeat: no-repeat;
+            background-size: 20px 20px;
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            display: inline-block;
+        }}
+        /* Optionally: slightly reduce icon opacity on hover for subtle effect */
+        .stButton > button:hover::before {{
+            opacity: 0.95;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
 
 # If user not logged in: show home (which can reveal the login panel).
 def render_home():
