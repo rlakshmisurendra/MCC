@@ -51,19 +51,7 @@ st.markdown(
         .top-banner img { height:140px; }
     }
 
-    /* Center container that truly centers its children */
-    .home-center {
-        width:100%;
-        display:flex;
-        flex-direction:column;
-        align-items:center;      /* centers horizontally */
-        justify-content:center;
-        margin-top: 18px;
-        text-align:center;
-        padding: 0 20px;
-        box-sizing: border-box;
-    }
-
+    /* Center content when placed in middle column */
     .dept-text {
         font-size:26px;
         font-weight:800;
@@ -71,6 +59,7 @@ st.markdown(
         margin-top: 18px;
         margin-bottom: 6px;
         text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        text-align:center;
     }
 
     /* Gradient underline */
@@ -80,7 +69,7 @@ st.markdown(
         border-radius:10px;
         background: linear-gradient(90deg, #ffb347, #ff5f6d);
         box-shadow: 0 6px 18px rgba(255,95,109,0.18);
-        margin-bottom: 18px;
+        margin: 12px auto 18px;
     }
 
     /* Info box */
@@ -100,7 +89,7 @@ st.markdown(
         box-shadow: 0 8px 30px rgba(0,0,0,0.35);
     }
 
-    /* CTA wrapper centers the Streamlit button */
+    /* CTA wrapper (when inside middle column it will be centered) */
     .cta-wrap {
         width:100%;
         display:flex;
@@ -205,7 +194,7 @@ def update_usage_stats(uid: str, session_start_ts: float, total_messages: int):
     }, merge=True)
 
 # -------------------------
-# LOGIN PANEL
+# LOGIN PANEL (centered placement too)
 # -------------------------
 def show_login_panel(autoscroll=True):
     google_logo_url = "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
@@ -221,6 +210,7 @@ def show_login_panel(autoscroll=True):
         unsafe_allow_html=True
     )
 
+    # center the login button using columns
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
         if st.button(" Login with Google", key="login_btn", use_container_width=True):
@@ -248,10 +238,10 @@ if "total_user_messages" not in st.session_state:
     st.session_state.total_user_messages = 0
 
 # -------------------------
-# RENDER HOME (centered)
+# RENDER HOME (using middle column for guaranteed centering)
 # -------------------------
 def render_home():
-    # top banner (full width but visually centered via max-width in CSS)
+    # TOP BANNER (full width image, visually centered by CSS max-width)
     st.markdown('<div class="top-banner">', unsafe_allow_html=True)
     try:
         st.image("assets/banner.jpg", use_column_width=True)
@@ -259,54 +249,54 @@ def render_home():
         st.image("https://via.placeholder.com/1200x300.png?text=Banner", use_column_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # centered block wrapper
-    st.markdown('<div class="home-center">', unsafe_allow_html=True)
+    # Use columns to center everything in the middle column.
+    # The middle column holds the content; side columns are flexible.
+    left, mid, right = st.columns([1, 2, 1])
 
-    # Department title (centered by home-center)
-    st.markdown('<div class="dept-text">Department of CSE - AIML</div>', unsafe_allow_html=True)
-    st.markdown('<div class="dept-underline"></div>', unsafe_allow_html=True)
+    with mid:
+        # Department title
+        st.markdown('<div class="dept-text">Department of CSE - AIML</div>', unsafe_allow_html=True)
+        st.markdown('<div class="dept-underline"></div>', unsafe_allow_html=True)
 
-    # Info box (centered)
-    st.markdown(
-        """
-        <div class="info-box">
-            Unlock seamless multilingual communication—start now!
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+        # Info box
+        st.markdown(
+            """
+            <div class="info-box">
+                Unlock seamless multilingual communication—start now!
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
-    # CTA (centered)
-    st.markdown('<div class="cta-wrap">', unsafe_allow_html=True)
-    clicked = st.button("Get Started →", key="home_get_started")
-    st.markdown('</div>', unsafe_allow_html=True)
+        # Get Started button centered by being in the middle column
+        st.markdown('<div class="cta-wrap">', unsafe_allow_html=True)
+        clicked = st.button("Get Started →", key="home_get_started")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)  # close home-center
-
-    # reveal login panel when clicked
+    # handle click
     if clicked:
         st.session_state.show_login = True
 
+    # If requested, show login panel (which itself centers its button)
     if st.session_state.show_login and not getattr(getattr(st, "user", None), "is_logged_in", False):
         show_login_panel(autoscroll=True)
 
 # -------------------------
 # MAIN FLOW
 # -------------------------
-# If user isn't logged in, show home
 user_logged_in = getattr(getattr(st, "user", None), "is_logged_in", False)
 if not user_logged_in:
     render_home()
     st.stop()
 
-# After login: ensure user doc + session
+# Logged in: ensure user doc & setup
 uid = ensure_user_doc(st.user)
 st.session_state.uid = uid
 
 if st.session_state.session_start_ts is None:
     st.session_state.session_start_ts = time.time()
 
-# Sidebar user info & logout
+# Sidebar: user info + logout + admin
 with st.sidebar:
     st.subheader("👤 User")
     st.write(f"Name: `{getattr(st.user, 'name', 'N/A')}`")
@@ -335,7 +325,7 @@ with st.sidebar:
             st.warning("st.logout not available in this runtime.")
         st.experimental_rerun()
 
-# Chat UI routing
+# Page routing for admin
 page = "Chatbot"
 user_email = getattr(st.user, "email", "")
 if user_email in ADMIN_EMAILS:
@@ -344,8 +334,6 @@ if user_email in ADMIN_EMAILS:
         page = st.radio("Go to", ["Chatbot", "Admin dashboard"])
 
 if page == "Admin dashboard":
-    # simple admin view
-    st.title("📊 Admin Dashboard")
     render_admin_dashboard()
     st.stop()
 
