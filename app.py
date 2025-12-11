@@ -31,18 +31,25 @@ Rules:
 """
 
 # -------------------------
-# GLOBAL CSS (centering + styles)
+# GLOBAL CSS (theme-aware + centered)
 # -------------------------
 st.markdown(
     """
     <style>
-    /* Top banner */
+    /* Use Streamlit theme variables where possible so colors adapt to light/dark themes */
+    :root {
+      --app-text: var(--text-color, #111827);
+      --app-secondary-bg: var(--secondary-background-color, rgba(0,0,0,0.05));
+      --app-border: rgba(0,0,0,0.06);
+    }
+
+    /* Top banner: placed in middle column to guarantee centering */
     .top-banner img {
         width:100%;
         height:300px;
         object-fit:cover;
         border-radius:10px;
-        box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+        box-shadow: 0 8px 28px rgba(0,0,0,0.10);
         margin: 14px auto;
         display:block;
         max-width:1200px;
@@ -51,42 +58,41 @@ st.markdown(
         .top-banner img { height:140px; }
     }
 
-    /* Center content when placed in middle column */
+    /* Department title (inherits theme text color) */
     .dept-text {
         font-size:26px;
         font-weight:800;
-        color:#ffffff;
+        color: var(--app-text);
         margin-top: 18px;
         margin-bottom: 6px;
-        text-shadow: 0 2px 8px rgba(0,0,0,0.4);
         text-align:center;
     }
 
-    /* Gradient underline */
+    /* Gradient underline (visual accent) */
     .dept-underline {
         width:160px;
-        height:5px;
+        height:6px;
         border-radius:10px;
         background: linear-gradient(90deg, #ffb347, #ff5f6d);
-        box-shadow: 0 6px 18px rgba(255,95,109,0.18);
+        box-shadow: 0 6px 18px rgba(255,95,109,0.12);
         margin: 12px auto 18px;
     }
 
-    /* Info box */
+    /* Info box: uses secondary background so it adapts to light/dark */
     .info-box {
         max-width:760px;
         width:100%;
         margin: 12px auto;
-        padding: 14px 20px;
+        padding: 16px 20px;
         text-align:center;
         font-size:18px;
         font-weight:600;
-        color:#ffffff;
-        background: rgba(255,255,255,0.05);
-        border: 1px solid rgba(255,255,255,0.12);
+        color: var(--app-text);
+        background: var(--app-secondary-bg);
+        border: 1px solid var(--app-border);
         border-radius:12px;
         backdrop-filter: blur(4px);
-        box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.06);
     }
 
     /* CTA wrapper (when inside middle column it will be centered) */
@@ -98,19 +104,26 @@ st.markdown(
         margin-bottom: 30px;
     }
 
-    /* Make Streamlit default button look nice */
+    /* Make Streamlit default button look nice and theme-friendly */
     .stButton>button {
         border-radius: 10px !important;
         padding: 12px 26px !important;
         font-weight:700 !important;
         font-size:16px !important;
+        color: var(--text-color) !important;
+        background: var(--primary-color) !important;
+        border: 1px solid rgba(0,0,0,0.08) !important;
     }
 
     /* Login panel adjustments */
     .login-panel { max-width:720px; margin: 20px auto; text-align:center; }
-    .login-title { font-size:20px; font-weight:700; margin-bottom:6px; }
-    .login-sub { color:#9aa2a8; margin-bottom:12px; }
+    .login-title { font-size:20px; font-weight:700; margin-bottom:6px; color: var(--app-text); }
+    .login-sub { color: var(--secondary-text-color, #6b7280); margin-bottom:12px; }
 
+    /* Ensure central column content has no left offset */
+    .stApp > div[data-testid="stHorizontalBlock"] {
+        /* no-op; kept as placeholder if needed */
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -203,44 +216,44 @@ def update_usage_stats(uid: str, session_start_ts: float, total_messages: int):
 # LOGIN-ONLY VIEW (banner + centered login)
 # -------------------------
 def render_login_only():
-    # Banner
-    st.markdown('<div class="top-banner">', unsafe_allow_html=True)
-    try:
-        st.image("assets/banner.jpg", use_column_width=True)
-    except Exception:
-        st.image("https://via.placeholder.com/1200x300.png?text=Banner", use_column_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # center login panel using middle column
+    # Banner in middle column for perfect centering & consistent max width
     left, mid, right = st.columns([1, 2, 1])
     with mid:
+        st.markdown('<div class="top-banner">', unsafe_allow_html=True)
+        try:
+            st.image("assets/banner.jpg", use_column_width=True)
+        except Exception:
+            st.image("https://via.placeholder.com/1200x300.png?text=Banner", use_column_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
         st.markdown('<div class="login-panel">', unsafe_allow_html=True)
         st.markdown('<div class="login-title">Continue with Google</div>', unsafe_allow_html=True)
         st.markdown('<div class="login-sub">Sign in with your Google account to continue</div>', unsafe_allow_html=True)
+
         if st.button(" Login with Google", key="login_btn_center", use_container_width=True):
             try:
                 st.login("google")
             except Exception:
                 st.error("st.login not available in this runtime. Deploy on Streamlit Cloud to use Google OIDC.")
+
         st.markdown('</div>', unsafe_allow_html=True)
 
 # -------------------------
-# HOME VIEW (full landing)
+# FULL HOME (banner + dept + info + CTA) - centered
 # -------------------------
-def render_home():
-    # TOP BANNER
-    st.markdown('<div class="top-banner">', unsafe_allow_html=True)
-    try:
-        st.image("assets/banner.jpg", use_column_width=True)
-    except Exception:
-        st.image("https://via.placeholder.com/1200x300.png?text=Banner", use_column_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # Middle column for centered content
+def render_full_home():
+    # Use columns to guarantee central alignment
     left, mid, right = st.columns([1, 2, 1])
-
     with mid:
-        # Department title
+        # Banner
+        st.markdown('<div class="top-banner">', unsafe_allow_html=True)
+        try:
+            st.image("assets/banner.jpg", use_column_width=True)
+        except Exception:
+            st.image("https://via.placeholder.com/1200x300.png?text=Banner", use_column_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # Department title / underline
         st.markdown('<div class="dept-text">Department of CSE - AIML</div>', unsafe_allow_html=True)
         st.markdown('<div class="dept-underline"></div>', unsafe_allow_html=True)
 
@@ -254,16 +267,13 @@ def render_home():
             unsafe_allow_html=True
         )
 
-        # Get Started button (centered because it's in mid column)
+        # CTA
         st.markdown('<div class="cta-wrap">', unsafe_allow_html=True)
-        if st.button("Get Started →", key="home_get_started"):
-            # set flag to show only login next run
+        if st.button("Get Started →", key="home_get_started_center"):
             st.session_state.show_login = True
-            # attempt immediate rerun (works in normal Streamlit runtimes)
             try:
                 st.experimental_rerun()
             except Exception:
-                # If rerun not available, we'll rely on the flag for next refresh
                 pass
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -272,16 +282,12 @@ def render_home():
 # -------------------------
 if "show_login" not in st.session_state:
     st.session_state.show_login = False
-
 if "chat" not in st.session_state:
     st.session_state.chat = None if model is None else model.start_chat(history=[])
-
 if "messages" not in st.session_state:
     st.session_state.messages = []
-
 if "session_start_ts" not in st.session_state:
     st.session_state.session_start_ts = None
-
 if "total_user_messages" not in st.session_state:
     st.session_state.total_user_messages = 0
 
@@ -295,25 +301,23 @@ if st.session_state.get("show_login", False) and not user_logged_in:
     render_login_only()
     st.stop()
 
-# If not logged in, show full home (default)
+# If not logged in show full home
 if not user_logged_in:
-    render_home()
+    render_full_home()
     st.stop()
 
-# Logged in: proceed with chat
+# Logged in: standard app
 uid = ensure_user_doc(st.user)
 st.session_state.uid = uid
-
 if st.session_state.session_start_ts is None:
     st.session_state.session_start_ts = time.time()
 
-# Sidebar: user info + controls
+# Sidebar
 with st.sidebar:
     st.subheader("👤 User")
     st.write(f"Name: `{getattr(st.user, 'name', 'N/A')}`")
     st.write(f"Email: `{getattr(st.user, 'email', 'N/A')}`")
     st.write(f"UID: `{uid}`")
-
     if st.session_state.session_start_ts is not None:
         elapsed = int(time.time() - st.session_state.session_start_ts)
         mins = elapsed // 60
@@ -339,7 +343,7 @@ with st.sidebar:
         except Exception:
             pass
 
-# Page routing for admin
+# Admin routing
 page = "Chatbot"
 user_email = getattr(st.user, "email", "")
 if user_email in ADMIN_EMAILS:
@@ -355,7 +359,6 @@ if page == "Admin dashboard":
 st.title("🌐 Multilingual Chatbot")
 st.caption("Type anything in any language. The bot will reply in the same language. ✨")
 
-# Ensure chat session exists
 if st.session_state.chat is None and model is not None:
     st.session_state.chat = model.start_chat(history=[])
 
