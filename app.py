@@ -273,6 +273,7 @@ def safe_rerun():
 # LOGIN PANEL
 # -------------------------
 def render_login_only():
+    # Banner
     st.markdown('<div class="top-banner">', unsafe_allow_html=True)
     try:
         st.image("assets/banner.jpg", use_column_width=True)
@@ -290,16 +291,22 @@ def render_login_only():
         unsafe_allow_html=True,
     )
 
-    # center the login button; key MUST match CSS selector id (#login_with_google_btn)
-    col1, col2, col3 = st.columns([1,2,1])
+    # Use a small 2-column layout so we can show the Google icon on the left and the button on the right.
+    # This reliably places the icon visually next to the button across Streamlit versions.
+    col1, col2, col3 = st.columns([1, 3, 1])
     with col2:
-        # note: key "login_with_google_btn" used in CSS as wrapper id
-        # Streamlit typically sets the outer div id to the widget key (works across versions)
-        if st.button(" Login with Google", key="login_with_google_btn", use_container_width=True):
-            try:
-                st.login("google")
-            except Exception:
-                st.error("Google login works only on Streamlit Cloud.")
+        c_icon, c_btn = st.columns([0.08, 0.92])
+        with c_icon:
+            # small inline Google logo
+            st.image("https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg", width=28)
+        with c_btn:
+            # This is the real Streamlit button that triggers the OIDC flow
+            if st.button(" Login with Google", key="login_with_google_btn", use_container_width=True):
+                try:
+                    st.login("google")
+                except Exception:
+                    st.error("st.login not available in this runtime. Deploy on Streamlit Cloud to use Google OIDC.")
+
 
 # -------------------------
 # HOME PAGE
