@@ -303,45 +303,40 @@ def safe_rerun():
 # LOGIN PANEL
 # -------------------------
 def render_login_only():
+    # Banner
     st.markdown('<div class="top-banner">', unsafe_allow_html=True)
-    st.image("assets/banner.jpg", use_column_width=True)
+    try:
+        st.image("assets/banner.jpg", use_column_width=True)
+    except Exception:
+        st.image("https://via.placeholder.com/1100x260.png?text=Banner", use_column_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown("""
-        <h2 style="text-align:center; font-weight:800; color:var(--text-color); margin-top:20px;">
-            Login to Continue
-        </h2>
-        <p style="text-align:center; color:var(--subtext-color);">
-            Use your Google account
-        </p>
-    """, unsafe_allow_html=True)
-
-    st.write("")
-
-    # Fake HTML button (beautiful)
-    clicked = st.markdown("""
-        <div style="display:flex; justify-content:center; margin-top:10px;">
-            <button class="google-btn" id="googleLoginButton">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                     class="google-icon">
-                Login with Google
-            </button>
+    st.markdown(
+        """
+        <div style="text-align:center; margin-top:20px;">
+            <h2 style="font-weight:800; color:var(--text-color);">Login to Continue</h2>
+            <p style="color:var(--muted-color); font-size:15px;">Use your Google account</p>
         </div>
-        <script>
-            const realButton = window.parent.document.querySelector('button[data-testid="login_btn_real"]');
-            const customButton = window.parent.document.getElementById('googleLoginButton');
-            if (customButton && realButton) {
-                customButton.addEventListener("click", () => realButton.click());
-            }
-        </script>
-    """, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True,
+    )
 
-    # Hidden real Streamlit button
-    if st.button("REAL_LOGIN", key="login_btn_real", help="", type="primary"):
-        try:
-            st.login("google")
-        except:
-            st.error("Google login works only on Streamlit Cloud.")
+    # Layout: small icon column + large button column centered
+    # We use a middle column to center the content, and inside it two nested columns.
+    col1, mid_col, col3 = st.columns([1, 2, 1])
+    with mid_col:
+        c_icon, c_btn = st.columns([0.08, 0.92])
+        # show the icon in the small left column (visually appears inside the button area)
+        with c_icon:
+            st.image("https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg", width=28)
+        # the actual Streamlit button is here (this is the real login trigger)
+        with c_btn:
+            if st.button(" Login with Google", key="login_with_google_btn", use_container_width=True):
+                try:
+                    st.login("google")
+                except Exception:
+                    st.error("st.login not available in this runtime. Deploy on Streamlit Cloud to use Google OIDC.")
+
 
 # -------------------------
 # HOME PAGE
