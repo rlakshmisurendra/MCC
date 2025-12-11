@@ -265,29 +265,82 @@ def show_login_panel():
 # -------------------------
 def render_home():
     banner_path = "assets/banner.jpg"
-    st.markdown('<div class="home-stack">', unsafe_allow_html=True)
 
-    # Banner (top)
+    # FULL-WIDTH TOP BANNER (like sacet.ac.in)
+    st.markdown(
+        """
+        <style>
+        .top-banner {
+            width: 100%;
+            display: block;
+            margin: 0;
+            padding: 0;
+        }
+        .top-banner img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: cover;
+        }
+
+        .home-center {
+            width: 100%;
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .dept-text {
+            font-weight: 700;
+            font-size: 24px;
+            color: white;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
+        .get-started-wrap {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .stButton>button {
+            border-radius: 10px !important; 
+            padding: 12px 22px !important;
+            font-weight: 600 !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Top banner exactly like SACET website
+    st.markdown('<div class="top-banner">', unsafe_allow_html=True)
     try:
         st.image(banner_path, use_column_width=True)
-    except Exception:
-        st.image("https://via.placeholder.com/1100x180.png?text=Banner", use_column_width=True)
+    except:
+        st.image("https://via.placeholder.com/1200x200?text=Banner", use_column_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    # Department centered
-    st.markdown(f'<div class="dept-text">Department of CSE - AIML</div>', unsafe_allow_html=True)
+    # Centered content
+    st.markdown('<div class="home-center">', unsafe_allow_html=True)
 
-    # Centered Get started
-    st.markdown('<div class="cta-wrap" style="text-align:center;">', unsafe_allow_html=True)
-    if st.button("Get started →", key="get_started_center"):
-        # just set the flag; no experimental rerun needed
+    st.markdown('<div class="dept-text">Department of CSE - AIML</div>', unsafe_allow_html=True)
+
+    st.markdown('<div class="get-started-wrap">', unsafe_allow_html=True)
+    clicked = st.button("Get started →", key="home_get_started")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    if clicked:
         st.session_state.show_login = True
-    st.markdown('</div>', unsafe_allow_html=True)
 
-    # If clicked, show login panel below (but still on home)
-    if st.session_state.get("show_login", False) and not getattr(st.user, "is_logged_in", False):
+    # Show login panel after clicking Get Started
+    if st.session_state.get("show_login") and not getattr(st.user, "is_logged_in", False):
         show_login_panel()
-
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # -------------------------
 # MAIN FLOW
